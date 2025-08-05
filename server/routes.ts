@@ -453,6 +453,328 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Additional missing endpoints for full functionality
+  
+  // Group contribution routes
+  app.get('/api/groups/:id/contributions', authenticateToken, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      const { cycle } = req.query;
+      
+      // Verify membership
+      const membership = await storage.getGroupMember(groupId, req.user!.id);
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a member of this group'
+        });
+      }
+
+      const contributions = await storage.getContributions(groupId, cycle ? parseInt(cycle as string) : undefined);
+      
+      res.json({
+        success: true,
+        data: { contributions }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Group payout routes
+  app.get('/api/groups/:id/payouts', authenticateToken, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      
+      // Verify membership
+      const membership = await storage.getGroupMember(groupId, req.user!.id);
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a member of this group'
+        });
+      }
+
+      const payouts = await storage.getPayouts(groupId);
+      
+      res.json({
+        success: true,
+        data: { payouts }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Request payout
+  app.post('/api/groups/:id/payout', authenticateToken, requireKYC, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      const { paymentMethod } = req.body;
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          error: 'Group not found'
+        });
+      }
+
+      // Verify membership
+      const membership = await storage.getGroupMember(groupId, req.user!.id);
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a member of this group'
+        });
+      }
+
+      // Check if user has already received payout for current cycle
+      if (membership.hasReceivedPayout) {
+        return res.status(400).json({
+          success: false,
+          error: 'Already received payout for this cycle'
+        });
+      }
+
+      // Check if all members have contributed
+      const members = await storage.getGroupMembers(groupId);
+      const contributions = await storage.getContributions(groupId, group.currentCycle || 1);
+      const paidContributions = contributions.filter(c => c.status === 'paid');
+
+      if (paidContributions.length < members.length) {
+        return res.status(400).json({
+          success: false,
+          error: `Payout not available. ${paidContributions.length}/${members.length} members have contributed`
+        });
+      }
+
+      // Calculate payout amount (total contributions for the cycle)
+      const totalAmount = paidContributions.reduce((sum, c) => sum + parseFloat(c.amount), 0);
+
+      const payout = await storage.createPayout({
+        groupId,
+        userId: req.user!.id,
+        cycleNumber: group.currentCycle || 1,
+        amount: totalAmount.toString(),
+        status: 'pending',
+        paymentMethod
+      });
+
+      // Mark member as having received payout
+      await storage.updateGroupMember(membership.id, { hasReceivedPayout: true });
+
+      res.status(201).json({
+        success: true,
+        data: { payout }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Group members management
+  app.get('/api/groups/:id/members', authenticateToken, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      
+      // Verify membership
+      const membership = await storage.getGroupMember(groupId, req.user!.id);
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a member of this group'
+        });
+      }
+
+      const members = await storage.getGroupMembers(groupId);
+      
+      res.json({
+        success: true,
+        data: { members }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Leave group
+  app.post('/api/groups/:id/leave', authenticateToken, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          error: 'Group not found'
+        });
+      }
+
+      // Admin cannot leave their own group
+      if (group.adminId === req.user!.id) {
+        return res.status(400).json({
+          success: false,
+          error: 'Group admin cannot leave the group'
+        });
+      }
+
+      await storage.removeGroupMember(groupId, req.user!.id);
+
+      res.json({
+        success: true,
+        message: 'Successfully left the group'
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Profile update
+  app.patch('/api/auth/profile', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const updates = req.body;
+      const updatedUser = await storage.updateUser(req.user!.id, updates);
+      
+      const { passwordHash, ...userResponse } = updatedUser;
+      
+      res.json({
+        success: true,
+        data: { user: userResponse }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Search groups
+  app.get('/api/groups/search', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { q: query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Search query is required'
+        });
+      }
+
+      // Simple search implementation - in production, use proper full-text search
+      // For now, this is a placeholder that returns empty array
+      const groups: any[] = [];
+      
+      res.json({
+        success: true,
+        data: { groups }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Payout history
+  app.get('/api/payouts/history', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { groupId } = req.query;
+      
+      let payouts;
+      if (groupId) {
+        // Verify membership if groupId is specified
+        const membership = await storage.getGroupMember(groupId as string, req.user!.id);
+        if (!membership) {
+          return res.status(403).json({
+            success: false,
+            error: 'Not a member of this group'
+          });
+        }
+        payouts = await storage.getPayouts(groupId as string);
+      } else {
+        payouts = await storage.getUserPayouts(req.user!.id);
+      }
+      
+      res.json({
+        success: true,
+        data: { payouts }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Get payout status for a group/cycle
+  app.get('/api/groups/:id/payout-status', authenticateToken, validateParams(schemas.uuidParam), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id: groupId } = req.params;
+      const { cycle, userId } = req.query;
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          error: 'Group not found'
+        });
+      }
+
+      const targetUserId = userId as string || req.user!.id;
+      const cycleNumber = cycle ? parseInt(cycle as string) : group.currentCycle || 1;
+      
+      // Verify membership
+      const membership = await storage.getGroupMember(groupId, targetUserId);
+      if (!membership) {
+        return res.status(403).json({
+          success: false,
+          error: 'Not a member of this group'
+        });
+      }
+
+      const members = await storage.getGroupMembers(groupId);
+      const contributions = await storage.getContributions(groupId, cycleNumber);
+      const paidContributions = contributions.filter(c => c.status === 'paid');
+
+      const isEligible = paidContributions.length >= members.length;
+      const hasReceived = membership.hasReceivedPayout;
+      const expectedAmount = isEligible ? (paidContributions.reduce((sum, c) => sum + parseFloat(c.amount), 0)).toString() : '0';
+
+      res.json({
+        success: true,
+        data: {
+          isEligible,
+          hasReceived,
+          expectedAmount
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

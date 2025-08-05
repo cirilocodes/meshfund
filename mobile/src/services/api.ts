@@ -2,7 +2,7 @@ import { STORAGE_KEYS, secureStorage } from '../utils/storage';
 
 const API_BASE_URL = __DEV__ 
   ? 'http://localhost:5000/api'
-  : 'https://api.meshfund.com/api';
+  : 'https://your-replit-app-name.replit.app/api';
 
 export interface ApiResponse<T = any> {
   success: boolean;

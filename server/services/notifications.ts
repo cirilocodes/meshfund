@@ -73,30 +73,45 @@ export class NotificationService {
 
     await this.createNotification({
       userId: recipientId,
-      groupId: groupId,
       type: 'payout_success',
-      title: 'Payout Processed',
-      message: `Your payout of ${amount} from "${group.name}" has been processed.`,
+      title: 'Payout Received',
+      message: `You received ${amount} ${group.currency} from ${group.name}`,
       data: {
-        amount,
-        groupName: group.name
+        groupId: groupId,
+        groupName: group.name,
+        amount: amount
       }
     });
   }
 
-  static async notifyGroupMembers(groupId: string, title: string, message: string, excludeUserId?: string): Promise<void> {
-    const members = await storage.getGroupMembers(groupId);
-    
-    for (const member of members) {
-      if (excludeUserId && member.userId === excludeUserId) continue;
+  static async notifyGroupMembers(
+    groupId: string, 
+    title: string, 
+    message: string, 
+    excludeUserId?: string
+  ): Promise<void> {
+    try {
+      const members = await storage.getGroupMembers(groupId);
+      const group = await storage.getGroup(groupId);
       
-      await this.createNotification({
-        userId: member.userId,
-        groupId: groupId,
-        type: 'group_update',
-        title,
-        message
-      });
+      if (!group) return;
+
+      for (const member of members) {
+        if (excludeUserId && member.userId === excludeUserId) continue;
+        
+        await this.createNotification({
+          userId: member.userId,
+          type: 'group_update',
+          title,
+          message,
+          data: {
+            groupId: groupId,
+            groupName: group.name
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to notify group members:', error);
     }
   }
 }
