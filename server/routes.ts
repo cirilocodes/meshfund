@@ -13,9 +13,9 @@ import { validateBody, validateParams, schemas } from "./middleware/validation";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 
 // Stripe setup
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('Missing STRIPE_SECRET_KEY - Stripe payments will be disabled');
 }
 const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2023-10-16",

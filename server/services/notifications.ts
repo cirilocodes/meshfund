@@ -1,7 +1,7 @@
 import { storage } from '../storage';
 import { EmailService } from './email';
 import { SMSService } from './sms';
-import type { InsertNotification } from '../../shared/schema';
+import type { InsertNotification } from '../schema';
 
 export class NotificationService {
   static async createNotification(notification: InsertNotification): Promise<void> {

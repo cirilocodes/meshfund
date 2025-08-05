@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../auth';
-import type { User } from '../../shared/schema';
+import type { User } from '../schema';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;

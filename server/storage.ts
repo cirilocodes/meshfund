@@ -1,4 +1,4 @@
-import { users, groups, groupMembers, contributions, payouts, notifications, disputes, type User, type InsertUser, type Group, type InsertGroup, type GroupMember, type InsertGroupMember, type Contribution, type InsertContribution, type Payout, type InsertPayout, type Notification, type InsertNotification } from "../shared/schema";
+import { users, groups, groupMembers, contributions, payouts, notifications, disputes, type User, type InsertUser, type Group, type InsertGroup, type GroupMember, type InsertGroupMember, type Contribution, type InsertContribution, type Payout, type InsertPayout, type Notification, type InsertNotification } from "./schema";
 import { db } from "./db";
 import { eq, and, desc, asc } from "drizzle-orm";
 
