@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
-  TextInput,
   View,
+  TextInput,
   Text,
   TouchableOpacity,
+  ViewStyle,
   TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +16,8 @@ interface InputProps extends TextInputProps {
   leftIcon?: keyof typeof Ionicons.glyphMap;
   rightIcon?: keyof typeof Ionicons.glyphMap;
   onRightIconPress?: () => void;
-  variant?: 'default' | 'filled';
+  containerStyle?: ViewStyle;
+  className?: string;
 }
 
 export default function Input({
@@ -24,76 +26,72 @@ export default function Input({
   leftIcon,
   rightIcon,
   onRightIconPress,
-  variant = 'default',
+  containerStyle,
+  className = '',
   secureTextEntry,
-  className,
   ...props
 }: InputProps) {
-  const [isSecureTextVisible, setIsSecureTextVisible] = useState(false);
+  const [isSecure, setIsSecure] = useState(secureTextEntry);
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleSecureTextToggle = () => {
-    setIsSecureTextVisible(!isSecureTextVisible);
+  const toggleSecureEntry = () => {
+    setIsSecure(!isSecure);
   };
 
-  const getInputStyles = () => {
-    switch (variant) {
-      case 'filled':
-        return 'bg-gray-50 border-gray-200';
-      default:
-        return 'bg-white border-gray-300';
-    }
-  };
-
-  const getBorderStyles = () => {
-    if (error) return 'border-red-500';
-    if (isFocused) return 'border-primary';
-    return 'border-gray-300';
+  const getInputContainerStyle = (): ViewStyle => {
+    return {
+      borderWidth: 1,
+      borderColor: error ? COLORS.error : (isFocused ? COLORS.primary : COLORS.border),
+      borderRadius: 12,
+      backgroundColor: COLORS.surface,
+      paddingHorizontal: 16,
+      height: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+    };
   };
 
   return (
-    <View className={className}>
+    <View style={containerStyle}>
       {label && (
-        <Text className="text-primary font-medium mb-2 text-base">
+        <Text style={{
+          fontSize: 16,
+          fontWeight: '600',
+          color: COLORS.textPrimary,
+          marginBottom: 8,
+        }}>
           {label}
         </Text>
       )}
       
-      <View className={`
-        ${getInputStyles()}
-        ${getBorderStyles()}
-        border
-        rounded-xl
-        flex-row
-        items-center
-        px-4
-        ${leftIcon || rightIcon || secureTextEntry ? 'pr-3' : 'px-4'}
-      `}>
+      <View style={getInputContainerStyle()}>
         {leftIcon && (
           <Ionicons
             name={leftIcon}
             size={20}
-            color={isFocused ? COLORS.primary : COLORS.textSecondary}
+            color={COLORS.textSecondary}
             style={{ marginRight: 12 }}
           />
         )}
         
         <TextInput
-          className="flex-1 py-4 text-base text-gray-900"
-          placeholderTextColor={COLORS.textSecondary}
-          secureTextEntry={secureTextEntry && !isSecureTextVisible}
+          {...props}
+          secureTextEntry={isSecure}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          {...props}
+          style={{
+            flex: 1,
+            fontSize: 16,
+            color: COLORS.textPrimary,
+            paddingVertical: 0,
+          }}
+          placeholderTextColor={COLORS.placeholder}
         />
         
         {secureTextEntry && (
-          <TouchableOpacity
-            onPress={handleSecureTextToggle}
-            className="ml-2 p-1"
-          >
+          <TouchableOpacity onPress={toggleSecureEntry} style={{ marginLeft: 12 }}>
             <Ionicons
-              name={isSecureTextVisible ? 'eye-off' : 'eye'}
+              name={isSecure ? 'eye-off-outline' : 'eye-outline'}
               size={20}
               color={COLORS.textSecondary}
             />
@@ -101,21 +99,22 @@ export default function Input({
         )}
         
         {rightIcon && !secureTextEntry && (
-          <TouchableOpacity
-            onPress={onRightIconPress}
-            className="ml-2 p-1"
-          >
+          <TouchableOpacity onPress={onRightIconPress} style={{ marginLeft: 12 }}>
             <Ionicons
               name={rightIcon}
               size={20}
-              color={isFocused ? COLORS.primary : COLORS.textSecondary}
+              color={COLORS.textSecondary}
             />
           </TouchableOpacity>
         )}
       </View>
       
       {error && (
-        <Text className="text-red-500 text-sm mt-1 ml-1">
+        <Text style={{
+          fontSize: 14,
+          color: COLORS.error,
+          marginTop: 4,
+        }}>
           {error}
         </Text>
       )}

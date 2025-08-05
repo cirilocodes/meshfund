@@ -1,141 +1,102 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { apiClient } from '../../services/api';
 import { COLORS } from '../../constants/colors';
 import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 
 interface Notification {
   id: string;
-  userId: string;
-  groupId?: string;
-  type: 'payment_reminder' | 'payout_success' | 'group_update' | 'dispute';
   title: string;
   message: string;
+  type: 'payment_reminder' | 'payout_success' | 'group_update' | 'dispute';
   isRead: boolean;
-  data?: any;
   createdAt: string;
+  data?: any;
 }
 
 export default function NotificationsScreen({ navigation }: any) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  useFocusEffect(
-    useCallback(() => {
-      loadNotifications();
-    }, [filter])
-  );
+  // Mock notifications for demonstration
+  useEffect(() => {
+    setNotifications([
+      {
+        id: '1',
+        title: 'Payment Reminder',
+        message: 'Your monthly contribution for Family Vacation Fund is due tomorrow',
+        type: 'payment_reminder',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: '2',
+        title: 'Payout Received',
+        message: 'You received $600 from Wedding Savings Circle',
+        type: 'payout_success',
+        isRead: false,
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '3',
+        title: 'New Member Joined',
+        message: 'Sarah Johnson joined your Family Vacation Fund group',
+        type: 'group_update',
+        isRead: true,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '4',
+        title: 'Cycle Complete',
+        message: 'All contributions received for this cycle in Business Investment Circle',
+        type: 'group_update',
+        isRead: true,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ]);
+  }, []);
 
-  const loadNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiClient.get<{ notifications: Notification[] }>(
-        `/notifications${filter === 'unread' ? '?unread=true' : ''}`
-      );
-      
-      if (response.success && response.data) {
-        setNotifications(response.data.notifications);
-      }
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      await loadNotifications();
-    } catch (error) {
-      console.error('Refresh failed:', error);
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setRefreshing(false);
-    }
-  }, [filter]);
-
-  const markAsRead = async (notificationId: string) => {
-    try {
-      await apiClient.patch(`/notifications/${notificationId}/read`);
-      
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
+    }, 1000);
   };
 
-  const markAllAsRead = async () => {
-    try {
-      // This would need to be implemented in the backend
-      await apiClient.patch('/notifications/mark-all-read');
-      
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification => ({ ...notification, isRead: true }))
-      );
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
-    }
+  const markAsRead = (notificationId: string) => {
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === notificationId
+          ? { ...notification, isRead: true }
+          : notification
+      )
+    );
   };
 
-  const handleNotificationPress = async (notification: Notification) => {
-    // Mark as read if not already read
-    if (!notification.isRead) {
-      await markAsRead(notification.id);
-    }
-
-    // Navigate based on notification type
-    switch (notification.type) {
-      case 'payment_reminder':
-        if (notification.groupId) {
-          navigation.navigate('Contributions', { groupId: notification.groupId });
-        }
-        break;
-      case 'payout_success':
-        if (notification.groupId) {
-          navigation.navigate('Payout', { groupId: notification.groupId });
-        }
-        break;
-      case 'group_update':
-        if (notification.groupId) {
-          navigation.navigate('GroupDetails', { groupId: notification.groupId });
-        }
-        break;
-      default:
-        break;
-    }
+  const markAllAsRead = () => {
+    setNotifications(prev =>
+      prev.map(notification => ({ ...notification, isRead: true }))
+    );
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'payment_reminder':
-        return 'wallet-outline';
+        return 'time-outline';
       case 'payout_success':
         return 'cash-outline';
       case 'group_update':
         return 'people-outline';
       case 'dispute':
-        return 'alert-circle-outline';
+        return 'warning-outline';
       default:
         return 'notifications-outline';
     }
@@ -144,166 +105,158 @@ export default function NotificationsScreen({ navigation }: any) {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case 'payment_reminder':
-        return COLORS.interactive;
+        return COLORS.warning;
       case 'payout_success':
-        return COLORS.accent;
+        return COLORS.success;
       case 'group_update':
-        return COLORS.primary;
+        return COLORS.info;
       case 'dispute':
-        return '#EF4444';
+        return COLORS.error;
       default:
-        return COLORS.textSecondary;
+        return COLORS.primary;
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
     if (diffInHours < 1) {
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-      return `${diffInMinutes}m ago`;
+      return 'Just now';
     } else if (diffInHours < 24) {
       return `${diffInHours}h ago`;
-    } else if (diffInHours < 168) { // 7 days
+    } else {
       const diffInDays = Math.floor(diffInHours / 24);
       return `${diffInDays}d ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
     }
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <View className="flex-1 bg-background">
-      {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-100">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-bold text-primary">Notifications</Text>
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: COLORS.background }}
+      refreshControl={
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh}
+          colors={[COLORS.primary]}
+          tintColor={COLORS.primary}
+        />
+      }
+    >
+      <View style={{ padding: 24 }}>
+        {/* Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <View>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: COLORS.primary }}>
+              Notifications
+            </Text>
+            {unreadCount > 0 && (
+              <Text style={{ color: COLORS.textSecondary, fontSize: 16 }}>
+                {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
           
           {unreadCount > 0 && (
-            <TouchableOpacity onPress={markAllAsRead}>
-              <Text className="text-primary font-medium">Mark All Read</Text>
+            <TouchableOpacity
+              onPress={markAllAsRead}
+              style={{
+                backgroundColor: COLORS.primary + '10',
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+              }}
+            >
+              <Text style={{ color: COLORS.primary, fontSize: 14, fontWeight: '600' }}>
+                Mark all read
+              </Text>
             </TouchableOpacity>
           )}
         </View>
-        
-        {/* Filter Tabs */}
-        <View className="flex-row mt-4 space-x-4">
-          <TouchableOpacity
-            onPress={() => setFilter('all')}
-            className={`px-4 py-2 rounded-full ${
-              filter === 'all' ? 'bg-primary' : 'bg-gray-100'
-            }`}
-          >
-            <Text className={`font-medium ${
-              filter === 'all' ? 'text-white' : 'text-gray-600'
-            }`}>
-              All
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={() => setFilter('unread')}
-            className={`px-4 py-2 rounded-full flex-row items-center ${
-              filter === 'unread' ? 'bg-primary' : 'bg-gray-100'
-            }`}
-          >
-            <Text className={`font-medium ${
-              filter === 'unread' ? 'text-white' : 'text-gray-600'
-            }`}>
-              Unread
-            </Text>
-            {unreadCount > 0 && (
-              <View className={`ml-2 px-2 py-1 rounded-full ${
-                filter === 'unread' ? 'bg-white' : 'bg-primary'
-              }`}>
-                <Text className={`text-xs font-bold ${
-                  filter === 'unread' ? 'text-primary' : 'text-white'
-                }`}>
-                  {unreadCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 24 }}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-            tintColor={COLORS.primary}
-          />
-        }
-      >
-        {isLoading ? (
+        {/* Notifications List */}
+        {notifications.length === 0 ? (
           <Card>
-            <Text className="text-text-secondary text-center">Loading notifications...</Text>
-          </Card>
-        ) : notifications.length === 0 ? (
-          <Card>
-            <View className="items-center py-12">
-              <Ionicons name="notifications-outline" size={64} color={COLORS.textSecondary} />
-              <Text className="text-xl font-semibold text-primary mt-4 mb-2">
-                {filter === 'unread' ? 'No Unread Notifications' : 'No Notifications'}
+            <View style={{ alignItems: 'center', paddingVertical: 48 }}>
+              <Ionicons name="notifications-off-outline" size={64} color={COLORS.textSecondary} />
+              <Text style={{ fontSize: 20, fontWeight: '600', color: COLORS.primary, marginTop: 16, marginBottom: 8 }}>
+                No Notifications
               </Text>
-              <Text className="text-text-secondary text-center">
-                {filter === 'unread' 
-                  ? 'All caught up! No new notifications to read.'
-                  : 'You\'ll receive notifications about payments, payouts, and group updates here.'
-                }
+              <Text style={{ color: COLORS.textSecondary, textAlign: 'center' }}>
+                You're all caught up! Notifications will appear here when you have updates.
               </Text>
             </View>
           </Card>
         ) : (
-          <View className="space-y-3">
+          <View style={{ gap: 12 }}>
             {notifications.map((notification) => (
               <TouchableOpacity
                 key={notification.id}
-                onPress={() => handleNotificationPress(notification)}
+                onPress={() => markAsRead(notification.id)}
               >
-                <Card className={`${
-                  !notification.isRead ? 'border-l-4 border-l-primary bg-blue-50' : ''
-                }`}>
-                  <View className="flex-row items-start">
-                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      !notification.isRead ? 'bg-primary' : 'bg-gray-100'
-                    }`}>
-                      <Ionicons
+                <Card style={{
+                  backgroundColor: notification.isRead ? COLORS.surface : COLORS.primary + '05',
+                  borderLeftWidth: 4,
+                  borderLeftColor: notification.isRead ? 'transparent' : getNotificationColor(notification.type),
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: getNotificationColor(notification.type) + '15',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                    }}>
+                      <Ionicons 
                         name={getNotificationIcon(notification.type) as any}
-                        size={20}
-                        color={!notification.isRead ? 'white' : getNotificationColor(notification.type)}
+                        size={20} 
+                        color={getNotificationColor(notification.type)} 
                       />
                     </View>
                     
-                    <View className="flex-1">
-                      <View className="flex-row items-start justify-between mb-1">
-                        <Text className={`text-base font-semibold ${
-                          !notification.isRead ? 'text-primary' : 'text-gray-800'
-                        }`}>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                        <Text style={{
+                          fontSize: 16,
+                          fontWeight: notification.isRead ? '500' : '600',
+                          color: COLORS.textPrimary,
+                          flex: 1,
+                        }}>
                           {notification.title}
                         </Text>
-                        <Text className="text-text-secondary text-xs">
-                          {formatDate(notification.createdAt)}
+                        
+                        <Text style={{
+                          fontSize: 12,
+                          color: COLORS.textSecondary,
+                          marginLeft: 8,
+                        }}>
+                          {formatRelativeTime(notification.createdAt)}
                         </Text>
                       </View>
                       
-                      <Text className="text-text-secondary text-sm leading-5">
+                      <Text style={{
+                        fontSize: 14,
+                        color: COLORS.textSecondary,
+                        lineHeight: 20,
+                      }}>
                         {notification.message}
                       </Text>
                       
                       {!notification.isRead && (
-                        <View className="w-2 h-2 bg-primary rounded-full mt-2" />
+                        <View style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: COLORS.primary,
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                        }} />
                       )}
                     </View>
                   </View>
@@ -312,7 +265,25 @@ export default function NotificationsScreen({ navigation }: any) {
             ))}
           </View>
         )}
-      </ScrollView>
-    </View>
+
+        {/* Settings */}
+        <Card style={{ marginTop: 24 }}>
+          <TouchableOpacity style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingVertical: 4,
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="settings-outline" size={20} color={COLORS.primary} />
+              <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.primary, marginLeft: 12 }}>
+                Notification Settings
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        </Card>
+      </View>
+    </ScrollView>
   );
 }

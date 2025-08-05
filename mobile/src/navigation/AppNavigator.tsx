@@ -13,6 +13,7 @@ import SignupScreen from '../screens/auth/SignupScreen';
 
 // Main app screens
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
+import GroupsScreen from '../screens/groups/GroupsScreen';
 import CreateGroupScreen from '../screens/group/CreateGroupScreen';
 import GroupDetailsScreen from '../screens/group/GroupDetailsScreen';
 import ContributionScreen from '../screens/contribution/ContributionScreen';
@@ -67,7 +68,7 @@ function MainTabNavigator() {
       />
       <Tab.Screen 
         name="Groups" 
-        component={CreateGroupScreen}
+        component={GroupsScreen}
         options={{ title: 'Groups' }}
       />
       <Tab.Screen 
@@ -115,6 +116,11 @@ function MainStack() {
         name="MainTabs" 
         component={MainTabNavigator}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="CreateGroup" 
+        component={CreateGroupScreen}
+        options={{ title: 'Create Group' }}
       />
       <Stack.Screen 
         name="GroupDetails" 

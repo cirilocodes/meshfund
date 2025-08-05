@@ -16,36 +16,41 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
 export default function SignupScreen({ navigation }: any) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuthStore();
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const validateForm = () => {
-    if (!fullName || !email || !password) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!formData.fullName.trim()) {
+      Alert.alert('Error', 'Please enter your full name');
       return false;
     }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!formData.email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
       return false;
     }
-
-    if (password.length < 8) {
+    if (!formData.password) {
+      Alert.alert('Error', 'Please enter a password');
+      return false;
+    }
+    if (formData.password.length < 8) {
       Alert.alert('Error', 'Password must be at least 8 characters long');
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
       return false;
     }
-
     return true;
   };
 
@@ -54,9 +59,14 @@ export default function SignupScreen({ navigation }: any) {
 
     setIsLoading(true);
     try {
-      await register(email, password, fullName, phoneNumber || undefined);
+      await register(
+        formData.email,
+        formData.password,
+        formData.fullName,
+        formData.phoneNumber || undefined
+      );
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message || 'Unable to create account. Please try again.');
+      Alert.alert('Signup Failed', error.message || 'Unable to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +74,7 @@ export default function SignupScreen({ navigation }: any) {
 
   return (
     <KeyboardAvoidingView 
-      className="flex-1 bg-background"
+      style={{ flex: 1, backgroundColor: COLORS.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style="dark" />
@@ -72,57 +82,72 @@ export default function SignupScreen({ navigation }: any) {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 justify-center px-6 py-12">
-          {/* Logo/Header */}
-          <View className="items-center mb-8">
-            <View className="w-20 h-20 bg-primary rounded-2xl items-center justify-center mb-6">
-              <Text className="text-white text-2xl font-bold">M</Text>
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 48 }}>
+          {/* Header */}
+          <View style={{ alignItems: 'center', marginBottom: 48 }}>
+            <View style={{ 
+              width: 80, 
+              height: 80, 
+              backgroundColor: COLORS.primary, 
+              borderRadius: 16, 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              marginBottom: 24 
+            }}>
+              <Text style={{ color: 'white', fontSize: 28, fontWeight: 'bold' }}>M</Text>
             </View>
-            <Text className="text-3xl font-bold text-primary mb-2">Join MeshFund</Text>
-            <Text className="text-text-secondary text-center text-base">
-              Create your account to start saving globally
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: COLORS.primary, marginBottom: 8 }}>
+              Join MeshFund
+            </Text>
+            <Text style={{ color: COLORS.textSecondary, textAlign: 'center', fontSize: 16 }}>
+              Create your account to start your savings journey
             </Text>
           </View>
 
           {/* Form */}
-          <View className="space-y-4">
+          <View style={{ gap: 16 }}>
             <Input
-              placeholder="Full Name *"
-              value={fullName}
-              onChangeText={setFullName}
+              label="Full Name"
+              placeholder="Enter your full name"
+              value={formData.fullName}
+              onChangeText={(value) => handleInputChange('fullName', value)}
               autoCapitalize="words"
               autoComplete="name"
             />
             
             <Input
-              placeholder="Email *"
-              value={email}
-              onChangeText={setEmail}
+              label="Email Address"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChangeText={(value) => handleInputChange('email', value)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
             />
             
             <Input
-              placeholder="Phone Number (Optional)"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              label="Phone Number (Optional)"
+              placeholder="Enter your phone number"
+              value={formData.phoneNumber}
+              onChangeText={(value) => handleInputChange('phoneNumber', value)}
               keyboardType="phone-pad"
               autoComplete="tel"
             />
             
             <Input
-              placeholder="Password *"
-              value={password}
-              onChangeText={setPassword}
+              label="Password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChangeText={(value) => handleInputChange('password', value)}
               secureTextEntry
               autoComplete="new-password"
             />
             
             <Input
-              placeholder="Confirm Password *"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChangeText={(value) => handleInputChange('confirmPassword', value)}
               secureTextEntry
               autoComplete="new-password"
             />
@@ -131,30 +156,39 @@ export default function SignupScreen({ navigation }: any) {
               title={isLoading ? 'Creating Account...' : 'Create Account'}
               onPress={handleSignup}
               loading={isLoading}
-              className="mt-6"
+              style={{ marginTop: 24 }}
             />
           </View>
 
           {/* Terms */}
-          <Text className="text-text-secondary text-sm text-center mt-6 leading-5">
+          <Text style={{ 
+            color: COLORS.textSecondary, 
+            fontSize: 14, 
+            textAlign: 'center', 
+            marginTop: 24,
+            lineHeight: 20 
+          }}>
             By creating an account, you agree to our{' '}
-            <Text className="text-primary">Terms of Service</Text> and{' '}
-            <Text className="text-primary">Privacy Policy</Text>
+            <Text style={{ color: COLORS.primary, fontWeight: '600' }}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={{ color: COLORS.primary, fontWeight: '600' }}>Privacy Policy</Text>
           </Text>
 
           {/* Footer */}
-          <View className="flex-row items-center justify-center mt-8">
-            <Text className="text-text-secondary text-base">
-              Already have an account? 
-            </Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Login')}
-              className="ml-1"
-            >
-              <Text className="text-primary text-base font-medium">
-                Sign In
+          <View style={{ alignItems: 'center', marginTop: 32 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ color: COLORS.textSecondary, fontSize: 16 }}>
+                Already have an account? 
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('Login')}
+                style={{ marginLeft: 4 }}
+              >
+                <Text style={{ color: COLORS.primary, fontSize: 16, fontWeight: '600' }}>
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>

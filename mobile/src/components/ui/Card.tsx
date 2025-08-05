@@ -1,54 +1,41 @@
 import React from 'react';
-import { View, ViewProps } from 'react-native';
+import { View, ViewStyle, ViewProps } from 'react-native';
+import { COLORS } from '../../constants/colors';
 
 interface CardProps extends ViewProps {
-  variant?: 'default' | 'elevated' | 'outlined';
-  padding?: 'none' | 'small' | 'medium' | 'large';
+  children: React.ReactNode;
+  className?: string;
+  padding?: number;
+  margin?: number;
 }
 
 export default function Card({
   children,
-  variant = 'default',
-  padding = 'medium',
-  className,
+  className = '',
+  padding = 16,
+  margin = 0,
+  style,
   ...props
 }: CardProps) {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'elevated':
-        return 'bg-white shadow-lg shadow-gray-200/50';
-      case 'outlined':
-        return 'bg-white border border-gray-200';
-      default:
-        return 'bg-white shadow-sm shadow-gray-200/30';
-    }
-  };
-
-  const getPaddingStyles = () => {
-    switch (padding) {
-      case 'none':
-        return '';
-      case 'small':
-        return 'p-3';
-      case 'medium':
-        return 'p-4';
-      case 'large':
-        return 'p-6';
-      default:
-        return 'p-4';
-    }
+  const cardStyle: ViewStyle = {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding,
+    margin,
+    shadowColor: COLORS.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   };
 
   return (
-    <View
-      className={`
-        ${getVariantStyles()}
-        ${getPaddingStyles()}
-        rounded-2xl
-        ${className || ''}
-      `}
-      {...props}
-    >
+    <View style={[cardStyle, style]} {...props}>
       {children}
     </View>
   );

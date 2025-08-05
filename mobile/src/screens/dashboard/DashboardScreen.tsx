@@ -5,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,13 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useGroupStore } from '../../store/groupStore';
 import { COLORS } from '../../constants/colors';
-import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+
+const { width } = Dimensions.get('window');
 
 export default function DashboardScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const { user, logout } = useAuthStore();
-  const { groups, loadUserGroups, isLoading } = useGroupStore();
+  const { groups, loadUserGroups } = useGroupStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -38,28 +40,9 @@ export default function DashboardScreen({ navigation }: any) {
     }
   }, []);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: logout },
-      ]
-    );
-  };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  const getTotalBalance = () => {
+  const getTotalSavings = () => {
     return groups.reduce((total, group) => {
-      // In a real app, this would calculate based on actual contributions and payouts
-      return total + parseFloat(group.contributionAmount) * group.currentCycle;
+      return total + (parseFloat(group.contributionAmount) * group.currentCycle);
     }, 0);
   };
 
@@ -67,9 +50,46 @@ export default function DashboardScreen({ navigation }: any) {
     return groups.filter(group => !group.isLocked).length;
   };
 
+  const getActiveGroups = () => {
+    return groups.filter(group => !group.isLocked);
+  };
+
+  const getRecentActivity = () => {
+    // Mock recent activity for demonstration
+    return [
+      {
+        id: '1',
+        type: 'contribution',
+        title: 'Payment Received',
+        description: 'Family Vacation Fund - $200',
+        time: '2 hours ago',
+        icon: 'arrow-down-circle',
+        color: COLORS.success,
+      },
+      {
+        id: '2',
+        type: 'payout',
+        title: 'Payout Sent',
+        description: 'Wedding Savings Circle - $1,200',
+        time: '1 day ago',
+        icon: 'arrow-up-circle',
+        color: COLORS.primary,
+      },
+      {
+        id: '3',
+        type: 'group_update',
+        title: 'New Member',
+        description: 'John joined Business Investment Group',
+        time: '3 days ago',
+        icon: 'person-add',
+        color: COLORS.info,
+      },
+    ];
+  };
+
   return (
     <ScrollView 
-      className="flex-1 bg-background"
+      style={{ flex: 1, backgroundColor: COLORS.background }}
       refreshControl={
         <RefreshControl 
           refreshing={refreshing} 
@@ -80,156 +100,265 @@ export default function DashboardScreen({ navigation }: any) {
       }
     >
       {/* Header */}
-      <View className="px-6 pt-6 pb-4">
-        <View className="flex-row justify-between items-center mb-6">
+      <View style={{ padding: 24, backgroundColor: COLORS.primary }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <View>
-            <Text className="text-lg text-text-secondary">
-              {getGreeting()},
+            <Text style={{ color: 'white', fontSize: 16, opacity: 0.9 }}>
+              Welcome back,
             </Text>
-            <Text className="text-2xl font-bold text-primary">
-              {user?.fullName?.split(' ')[0] || 'User'}
+            <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
+              {user?.username || user?.email || 'User'}
             </Text>
           </View>
+          
           <TouchableOpacity
-            onPress={handleLogout}
-            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+            onPress={() => navigation.navigate('Profile')}
+            style={{
+              width: 48,
+              height: 48,
+              backgroundColor: 'white',
+              borderRadius: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <Ionicons name="log-out-outline" size={20} color={COLORS.textSecondary} />
+            <Text style={{ color: COLORS.primary, fontSize: 18, fontWeight: 'bold' }}>
+              {(user?.username || user?.email || 'U').charAt(0).toUpperCase()}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Quick Stats */}
-        <View className="flex-row space-x-4">
-          <Card className="flex-1 bg-primary">
-            <Text className="text-white text-sm opacity-80">Total Saved</Text>
-            <Text className="text-white text-2xl font-bold">
-              ${getTotalBalance().toFixed(2)}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Card style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <Text style={{ color: 'white', fontSize: 14, opacity: 0.8 }}>Total Saved</Text>
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+              ${getTotalSavings().toFixed(2)}
             </Text>
           </Card>
           
-          <Card className="flex-1 bg-accent">
-            <Text className="text-white text-sm opacity-80">Active Groups</Text>
-            <Text className="text-white text-2xl font-bold">
-              {groups.length}
+          <Card style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <Text style={{ color: 'white', fontSize: 14, opacity: 0.8 }}>Active Groups</Text>
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+              {getActiveGroups().length}
             </Text>
           </Card>
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View className="px-6 mb-6">
-        <Text className="text-xl font-semibold text-primary mb-4">Quick Actions</Text>
-        <View className="flex-row space-x-4">
-          <TouchableOpacity 
-            className="flex-1 bg-white rounded-2xl p-4 items-center shadow-sm border border-gray-100"
-            onPress={() => navigation.navigate('Groups')}
-          >
-            <View className="w-12 h-12 bg-primary rounded-full items-center justify-center mb-2">
-              <Ionicons name="add" size={24} color="white" />
-            </View>
-            <Text className="text-primary font-medium">Create Group</Text>
-          </TouchableOpacity>
+      <View style={{ padding: 24 }}>
+        {/* Quick Actions */}
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 20, fontWeight: '600', color: COLORS.primary, marginBottom: 16 }}>
+            Quick Actions
+          </Text>
           
-          <TouchableOpacity 
-            className="flex-1 bg-white rounded-2xl p-4 items-center shadow-sm border border-gray-100"
-            onPress={() => navigation.navigate('Contributions')}
-          >
-            <View className="w-12 h-12 bg-accent rounded-full items-center justify-center mb-2">
-              <Ionicons name="wallet" size={20} color="white" />
-            </View>
-            <Text className="text-primary font-medium">Make Payment</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* My Groups */}
-      <View className="px-6 mb-6">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-xl font-semibold text-primary">My Groups</Text>
-          {groups.length > 0 && (
-            <TouchableOpacity>
-              <Text className="text-primary font-medium">View All</Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => navigation.navigate('CreateGroup')}
+            >
+              <Card style={{ alignItems: 'center', paddingVertical: 20 }}>
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: COLORS.primary + '20',
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 8,
+                }}>
+                  <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary }}>
+                  Create Group
+                </Text>
+              </Card>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => navigation.navigate('Contributions')}
+            >
+              <Card style={{ alignItems: 'center', paddingVertical: 20 }}>
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: COLORS.success + '20',
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 8,
+                }}>
+                  <Ionicons name="card" size={24} color={COLORS.success} />
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary }}>
+                  Pay Now
+                </Text>
+              </Card>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => navigation.navigate('Groups')}
+            >
+              <Card style={{ alignItems: 'center', paddingVertical: 20 }}>
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: COLORS.info + '20',
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 8,
+                }}>
+                  <Ionicons name="people" size={24} color={COLORS.info} />
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary }}>
+                  My Groups
+                </Text>
+              </Card>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Active Groups */}
+        <View style={{ marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text style={{ fontSize: 20, fontWeight: '600', color: COLORS.primary }}>
+              Active Groups
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Groups')}>
+              <Text style={{ color: COLORS.primary, fontSize: 14, fontWeight: '600' }}>
+                View All
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {getActiveGroups().length === 0 ? (
+            <Card>
+              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                <Ionicons name="people-outline" size={48} color={COLORS.textSecondary} />
+                <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.textPrimary, marginTop: 12, marginBottom: 8 }}>
+                  No Active Groups
+                </Text>
+                <Text style={{ color: COLORS.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+                  Create or join a savings group to get started
+                </Text>
+                <Button
+                  title="Create Group"
+                  onPress={() => navigation.navigate('CreateGroup')}
+                  size="small"
+                />
+              </View>
+            </Card>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                {getActiveGroups().slice(0, 3).map((group) => (
+                  <TouchableOpacity
+                    key={group.id}
+                    onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
+                  >
+                    <Card style={{ width: width * 0.7, marginRight: 4 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 8 }}>
+                        {group.name}
+                      </Text>
+                      <Text style={{ color: COLORS.textSecondary, fontSize: 14, marginBottom: 12 }}>
+                        {group.description || 'No description'}
+                      </Text>
+                      
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <View>
+                          <Text style={{ fontSize: 18, fontWeight: 'bold', color: COLORS.primary }}>
+                            {group.contributionAmount} {group.currency}
+                          </Text>
+                          <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>
+                            {group.frequency} contribution
+                          </Text>
+                        </View>
+                        
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary }}>
+                            Cycle {group.currentCycle}
+                          </Text>
+                          <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>
+                            of {group.maxMembers}
+                          </Text>
+                        </View>
+                      </View>
+                    </Card>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           )}
         </View>
 
-        {isLoading ? (
+        {/* Recent Activity */}
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 20, fontWeight: '600', color: COLORS.primary, marginBottom: 16 }}>
+            Recent Activity
+          </Text>
+          
           <Card>
-            <Text className="text-text-secondary text-center">Loading groups...</Text>
-          </Card>
-        ) : groups.length === 0 ? (
-          <Card>
-            <View className="items-center py-8">
-              <Ionicons name="people-outline" size={48} color={COLORS.textSecondary} />
-              <Text className="text-xl font-semibold text-primary mt-4 mb-2">
-                No Groups Yet
-              </Text>
-              <Text className="text-text-secondary text-center mb-6">
-                Start your savings journey by creating or joining a group
-              </Text>
-              <Button
-                title="Create Your First Group"
-                onPress={() => navigation.navigate('Groups')}
-                variant="primary"
-              />
-            </View>
-          </Card>
-        ) : (
-          <View className="space-y-3">
-            {groups.slice(0, 3).map((group) => (
-              <TouchableOpacity
-                key={group.id}
-                onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
-              >
-                <Card>
-                  <View className="flex-row justify-between items-start mb-3">
-                    <View className="flex-1">
-                      <Text className="text-lg font-semibold text-primary mb-1">
-                        {group.name}
-                      </Text>
-                      <Text className="text-text-secondary text-sm">
-                        Cycle {group.currentCycle} • {group.frequency}
-                      </Text>
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-lg font-bold text-accent">
-                        ${group.contributionAmount}
-                      </Text>
-                      <Text className="text-text-secondary text-sm">
-                        {group.currency}
-                      </Text>
-                    </View>
+            {getRecentActivity().map((activity, index) => (
+              <View key={activity.id}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
+                  <View style={{
+                    width: 40,
+                    height: 40,
+                    backgroundColor: activity.color + '15',
+                    borderRadius: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}>
+                    <Ionicons name={activity.icon as any} size={20} color={activity.color} />
                   </View>
                   
-                  <View className="flex-row items-center">
-                    <View className="flex-1 bg-gray-100 rounded-full h-2 mr-3">
-                      <View 
-                        className="bg-accent h-2 rounded-full"
-                        style={{ width: `${(group.currentCycle / group.maxMembers) * 100}%` }}
-                      />
-                    </View>
-                    <Text className="text-text-secondary text-sm">
-                      {group.currentCycle}/{group.maxMembers}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary }}>
+                      {activity.title}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: COLORS.textSecondary }}>
+                      {activity.description}
                     </Text>
                   </View>
-                </Card>
-              </TouchableOpacity>
+                  
+                  <Text style={{ fontSize: 12, color: COLORS.textSecondary }}>
+                    {activity.time}
+                  </Text>
+                </View>
+                
+                {index < getRecentActivity().length - 1 && (
+                  <View style={{ height: 1, backgroundColor: COLORS.borderLight, marginVertical: 4 }} />
+                )}
+              </View>
             ))}
-          </View>
-        )}
-      </View>
+          </Card>
+        </View>
 
-      {/* Recent Activity */}
-      <View className="px-6 pb-6">
-        <Text className="text-xl font-semibold text-primary mb-4">Recent Activity</Text>
-        <Card>
-          <View className="items-center py-6">
-            <Ionicons name="time-outline" size={32} color={COLORS.textSecondary} />
-            <Text className="text-text-secondary text-center mt-2">
-              No recent activity
+        {/* Upcoming Payments */}
+        {getUpcomingPayments() > 0 && (
+          <Card style={{ backgroundColor: COLORS.warning + '10', borderColor: COLORS.warning + '30' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <Ionicons name="time-outline" size={20} color={COLORS.warning} />
+              <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.warning, marginLeft: 8 }}>
+                Upcoming Payments
+              </Text>
+            </View>
+            <Text style={{ color: COLORS.textSecondary, marginBottom: 16 }}>
+              You have {getUpcomingPayments()} payment{getUpcomingPayments() !== 1 ? 's' : ''} due soon
             </Text>
-          </View>
-        </Card>
+            <Button
+              title="Make Payments"
+              onPress={() => navigation.navigate('Contributions')}
+              variant="outline"
+              size="small"
+            />
+          </Card>
+        )}
       </View>
     </ScrollView>
   );

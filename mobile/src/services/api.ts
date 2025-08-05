@@ -1,7 +1,7 @@
 import { STORAGE_KEYS, secureStorage } from '../utils/storage';
 
 const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:8000/api'
+  ? 'http://localhost:5000/api'
   : 'https://api.meshfund.com/api';
 
 export interface ApiResponse<T = any> {

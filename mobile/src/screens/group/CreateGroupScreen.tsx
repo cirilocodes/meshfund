@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,97 +6,59 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useGroupStore } from '../../store/groupStore';
 import { COLORS } from '../../constants/colors';
-import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 
-const FREQUENCY_OPTIONS = [
-  { value: 'weekly', label: 'Weekly', description: 'Every week' },
-  { value: 'bi-weekly', label: 'Bi-weekly', description: 'Every 2 weeks' },
-  { value: 'monthly', label: 'Monthly', description: 'Every month' },
-];
-
-const CURRENCY_OPTIONS = [
-  { value: 'USD', label: 'USD ($)', flag: '🇺🇸' },
-  { value: 'EUR', label: 'EUR (€)', flag: '🇪🇺' },
-  { value: 'GBP', label: 'GBP (£)', flag: '🇬🇧' },
-  { value: 'GHS', label: 'GHS (₵)', flag: '🇬🇭' },
-  { value: 'NGN', label: 'NGN (₦)', flag: '🇳🇬' },
-  { value: 'KES', label: 'KES (KSh)', flag: '🇰🇪' },
-];
-
 export default function CreateGroupScreen({ navigation }: any) {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [description, setDescription] = useState('');
-  const [contributionAmount, setContributionAmount] = useState('');
-  const [frequency, setFrequency] = useState('monthly');
-  const [maxMembers, setMaxMembers] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    contributionAmount: '',
+    frequency: 'monthly',
+    maxMembers: '',
+    currency: 'USD',
+  });
   const [isLoading, setIsLoading] = useState(false);
+  const { createGroup } = useGroupStore();
 
-  const { groups, createGroup, loadUserGroups } = useGroupStore();
-
-  useFocusEffect(
-    useCallback(() => {
-      loadUserGroups();
-    }, [])
-  );
-
-  const validateForm = () => {
-    if (!groupName.trim()) {
-      Alert.alert('Error', 'Please enter a group name');
-      return false;
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.name.trim()) {
+      Alert.alert('Error', 'Group name is required');
+      return;
     }
-
-    if (!contributionAmount || isNaN(parseFloat(contributionAmount)) || parseFloat(contributionAmount) <= 0) {
+    
+    if (!formData.contributionAmount || parseFloat(formData.contributionAmount) <= 0) {
       Alert.alert('Error', 'Please enter a valid contribution amount');
-      return false;
+      return;
     }
-
-    if (!maxMembers || isNaN(parseInt(maxMembers)) || parseInt(maxMembers) < 2 || parseInt(maxMembers) > 50) {
-      Alert.alert('Error', 'Maximum members must be between 2 and 50');
-      return false;
+    
+    if (!formData.maxMembers || parseInt(formData.maxMembers) < 2) {
+      Alert.alert('Error', 'Group must have at least 2 members');
+      return;
     }
-
-    return true;
-  };
-
-  const handleCreateGroup = async () => {
-    if (!validateForm()) return;
 
     setIsLoading(true);
     try {
       await createGroup({
-        name: groupName.trim(),
-        description: description.trim() || undefined,
-        contributionAmount,
-        frequency: frequency as any,
-        maxMembers: parseInt(maxMembers),
-        currency,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        contributionAmount: formData.contributionAmount,
+        frequency: formData.frequency,
+        maxMembers: parseInt(formData.maxMembers),
+        currency: formData.currency,
       });
-
+      
       Alert.alert(
         'Success',
         'Group created successfully!',
-        [{ text: 'OK', onPress: () => setShowCreateForm(false) }]
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
-
-      // Reset form
-      setGroupName('');
-      setDescription('');
-      setContributionAmount('');
-      setMaxMembers('');
-      setFrequency('monthly');
-      setCurrency('USD');
-      
-      // Reload groups
-      await loadUserGroups();
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to create group');
     } finally {
@@ -104,197 +66,217 @@ export default function CreateGroupScreen({ navigation }: any) {
     }
   };
 
-  if (showCreateForm) {
-    return (
-      <ScrollView className="flex-1 bg-background">
-        <View className="px-6 py-6">
-          <View className="flex-row items-center mb-6">
-            <TouchableOpacity
-              onPress={() => setShowCreateForm(false)}
-              className="mr-4"
-            >
-              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-            <Text className="text-2xl font-bold text-primary">Create New Group</Text>
-          </View>
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-          <Card>
-            <View className="space-y-4">
-              <Input
-                placeholder="Group Name"
-                value={groupName}
-                onChangeText={setGroupName}
-                autoCapitalize="words"
-              />
+  const frequencies = [
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'quarterly', label: 'Quarterly' },
+  ];
 
-              <Input
-                placeholder="Description (Optional)"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={3}
-                style={{ height: 80, textAlignVertical: 'top' }}
-              />
-
-              <View className="flex-row space-x-2">
-                <View className="flex-1">
-                  <Input
-                    placeholder="Amount"
-                    value={contributionAmount}
-                    onChangeText={setContributionAmount}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                <View className="w-24">
-                  <TouchableOpacity className="border border-gray-300 rounded-xl p-4 h-14 justify-center">
-                    <Text className="text-primary font-medium text-center">
-                      {CURRENCY_OPTIONS.find(c => c.value === currency)?.flag} {currency}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <Input
-                placeholder="Maximum Members"
-                value={maxMembers}
-                onChangeText={setMaxMembers}
-                keyboardType="number-pad"
-              />
-
-              {/* Frequency Selection */}
-              <View>
-                <Text className="text-primary font-medium mb-3">Payment Frequency</Text>
-                <View className="space-y-2">
-                  {FREQUENCY_OPTIONS.map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      onPress={() => setFrequency(option.value)}
-                      className={`p-4 rounded-xl border-2 ${
-                        frequency === option.value
-                          ? 'border-primary bg-blue-50'
-                          : 'border-gray-200'
-                      }`}
-                    >
-                      <View className="flex-row items-center">
-                        <View className="flex-1">
-                          <Text className={`font-medium ${
-                            frequency === option.value ? 'text-primary' : 'text-gray-700'
-                          }`}>
-                            {option.label}
-                          </Text>
-                          <Text className="text-text-secondary text-sm">
-                            {option.description}
-                          </Text>
-                        </View>
-                        {frequency === option.value && (
-                          <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <Button
-                title={isLoading ? 'Creating Group...' : 'Create Group'}
-                onPress={handleCreateGroup}
-                loading={isLoading}
-                className="mt-6"
-              />
-            </View>
-          </Card>
-        </View>
-      </ScrollView>
-    );
-  }
+  const currencies = [
+    { value: 'USD', label: 'USD ($)' },
+    { value: 'EUR', label: 'EUR (€)' },
+    { value: 'GBP', label: 'GBP (£)' },
+    { value: 'GHS', label: 'GHS (₵)' },
+    { value: 'NGN', label: 'NGN (₦)' },
+    { value: 'KES', label: 'KES (KSh)' },
+  ];
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="px-6 py-6">
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-2xl font-bold text-primary">My Groups</Text>
-          <Button
-            title="Create Group"
-            onPress={() => setShowCreateForm(true)}
-            variant="primary"
-            size="small"
-          />
-        </View>
+    <ScrollView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <View style={{ padding: 24 }}>
+        {/* Header */}
+        <Card style={{ marginBottom: 24, backgroundColor: COLORS.primary }}>
+          <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+            <View style={{
+              width: 64,
+              height: 64,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              borderRadius: 32,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 12,
+            }}>
+              <Ionicons name="people" size={32} color="white" />
+            </View>
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 4 }}>
+              Create New Group
+            </Text>
+            <Text style={{ color: 'white', opacity: 0.8, textAlign: 'center' }}>
+              Start a savings circle with friends, family, or colleagues
+            </Text>
+          </View>
+        </Card>
 
-        {groups.length === 0 ? (
-          <Card>
-            <View className="items-center py-12">
-              <Ionicons name="people-outline" size={64} color={COLORS.textSecondary} />
-              <Text className="text-xl font-semibold text-primary mt-4 mb-2">
-                No Groups Yet
-              </Text>
-              <Text className="text-text-secondary text-center mb-6 px-4">
-                Create your first savings group to start your financial journey with friends and family
-              </Text>
-              <Button
-                title="Create Your First Group"
-                onPress={() => setShowCreateForm(true)}
-                variant="primary"
+        {/* Group Details */}
+        <Card style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: 16 }}>
+            Group Information
+          </Text>
+          
+          <Input
+            label="Group Name *"
+            placeholder="e.g., Family Vacation Fund"
+            value={formData.name}
+            onChangeText={(value) => updateField('name', value)}
+            style={{ marginBottom: 16 }}
+          />
+          
+          <Input
+            label="Description"
+            placeholder="What is this group saving for?"
+            value={formData.description}
+            onChangeText={(value) => updateField('description', value)}
+            multiline
+            numberOfLines={3}
+            style={{ marginBottom: 16 }}
+          />
+        </Card>
+
+        {/* Financial Details */}
+        <Card style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: 16 }}>
+            Financial Settings
+          </Text>
+          
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+            <View style={{ flex: 2 }}>
+              <Input
+                label="Contribution Amount *"
+                placeholder="100"
+                value={formData.contributionAmount}
+                onChangeText={(value) => updateField('contributionAmount', value)}
+                keyboardType="numeric"
               />
             </View>
-          </Card>
-        ) : (
-          <View className="space-y-3">
-            {groups.map((group) => (
+            
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 8 }}>
+                Currency
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                {currencies.map((currency) => (
+                  <TouchableOpacity
+                    key={currency.value}
+                    onPress={() => updateField('currency', currency.value)}
+                    style={{
+                      backgroundColor: formData.currency === currency.value ? COLORS.primary : COLORS.surfaceLight,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Text style={{
+                      color: formData.currency === currency.value ? 'white' : COLORS.textPrimary,
+                      fontSize: 12,
+                      fontWeight: '600',
+                    }}>
+                      {currency.value}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+          
+          <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 8 }}>
+            Payment Frequency
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+            {frequencies.map((freq) => (
               <TouchableOpacity
-                key={group.id}
-                onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
+                key={freq.value}
+                onPress={() => updateField('frequency', freq.value)}
+                style={{
+                  flex: 1,
+                  backgroundColor: formData.frequency === freq.value ? COLORS.primary : COLORS.surfaceLight,
+                  borderRadius: 8,
+                  paddingVertical: 12,
+                  alignItems: 'center',
+                }}
               >
-                <Card>
-                  <View className="flex-row justify-between items-start mb-4">
-                    <View className="flex-1">
-                      <Text className="text-lg font-semibold text-primary mb-1">
-                        {group.name}
-                      </Text>
-                      {group.description && (
-                        <Text className="text-text-secondary text-sm mb-2">
-                          {group.description}
-                        </Text>
-                      )}
-                      <View className="flex-row items-center">
-                        <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
-                        <Text className="text-text-secondary text-sm ml-1 capitalize">
-                          {group.frequency} • Cycle {group.currentCycle}
-                        </Text>
-                      </View>
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-xl font-bold text-accent">
-                        {CURRENCY_OPTIONS.find(c => c.value === group.currency)?.flag} {group.contributionAmount}
-                      </Text>
-                      <Text className="text-text-secondary text-sm">
-                        per cycle
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-                    <View className="flex-row items-center">
-                      <Ionicons name="people" size={16} color={COLORS.textSecondary} />
-                      <Text className="text-text-secondary text-sm ml-1">
-                        {group.maxMembers} members max
-                      </Text>
-                    </View>
-                    <View className={`px-3 py-1 rounded-full ${
-                      group.isLocked ? 'bg-red-100' : 'bg-green-100'
-                    }`}>
-                      <Text className={`text-xs font-medium ${
-                        group.isLocked ? 'text-red-700' : 'text-green-700'
-                      }`}>
-                        {group.isLocked ? 'Locked' : 'Active'}
-                      </Text>
-                    </View>
-                  </View>
-                </Card>
+                <Text style={{
+                  color: formData.frequency === freq.value ? 'white' : COLORS.textPrimary,
+                  fontWeight: '600',
+                }}>
+                  {freq.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
+        </Card>
+
+        {/* Group Settings */}
+        <Card style={{ marginBottom: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.primary, marginBottom: 16 }}>
+            Group Settings
+          </Text>
+          
+          <Input
+            label="Maximum Members *"
+            placeholder="e.g., 10"
+            value={formData.maxMembers}
+            onChangeText={(value) => updateField('maxMembers', value)}
+            keyboardType="numeric"
+            style={{ marginBottom: 16 }}
+          />
+          
+          <View style={{ backgroundColor: COLORS.info + '10', borderRadius: 8, padding: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Ionicons name="information-circle" size={20} color={COLORS.info} />
+              <Text style={{ color: COLORS.info, fontWeight: '600', marginLeft: 8 }}>
+                How It Works
+              </Text>
+            </View>
+            <Text style={{ color: COLORS.textSecondary, fontSize: 14, lineHeight: 20 }}>
+              Each cycle, one member receives the total contributions from all members. 
+              The cycle continues until everyone has received a payout.
+            </Text>
+          </View>
+        </Card>
+
+        {/* Summary */}
+        {formData.contributionAmount && formData.maxMembers && (
+          <Card style={{ marginBottom: 32, backgroundColor: COLORS.accent + '10', borderColor: COLORS.accent + '30' }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.accent, marginBottom: 12 }}>
+              Group Summary
+            </Text>
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ color: COLORS.textSecondary }}>Total Pool Per Cycle:</Text>
+                <Text style={{ fontWeight: '600', color: COLORS.textPrimary }}>
+                  {(parseFloat(formData.contributionAmount || '0') * parseInt(formData.maxMembers || '0')).toFixed(2)} {formData.currency}
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ color: COLORS.textSecondary }}>Group Duration:</Text>
+                <Text style={{ fontWeight: '600', color: COLORS.textPrimary }}>
+                  {formData.maxMembers} {formData.frequency} cycles
+                </Text>
+              </View>
+            </View>
+          </Card>
         )}
+
+        {/* Action Buttons */}
+        <View style={{ gap: 12 }}>
+          <Button
+            title="Create Group"
+            onPress={handleSubmit}
+            loading={isLoading}
+            disabled={!formData.name || !formData.contributionAmount || !formData.maxMembers}
+          />
+          
+          <Button
+            title="Cancel"
+            onPress={() => navigation.goBack()}
+            variant="outline"
+          />
+        </View>
       </View>
     </ScrollView>
   );
