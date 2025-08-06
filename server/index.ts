@@ -42,7 +42,7 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: '*',
+  origin: '169.254.170.233:5000',
   credentials: true
 }));
 
