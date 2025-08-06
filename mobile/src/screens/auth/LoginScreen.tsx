@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { styled } from 'nativewind';
+import { View as RNView, Text as RNText, ScrollView as RNScrollView, TouchableOpacity as RNTouchableOpacity, Modal as RNModal, KeyboardAvoidingView as RNKeyboardAvoidingView} from 'react-native';
+import { Alert } from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { useAuthStore } from '../../store/authStore';
@@ -20,6 +15,13 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuthStore();
+
+  const View = styled(RNView);
+  const Text = styled(RNText);
+  const ScrollView = styled(RNScrollView);
+  const TouchableOpacity = styled(RNTouchableOpacity);
+  const Modal = styled(RNModal);
+  const KeyboardAvoidingView = styled(RNKeyboardAvoidingView);
 
   const handleLogin = async () => {
     if (!email || !password) {

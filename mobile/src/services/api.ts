@@ -1,8 +1,6 @@
 import { STORAGE_KEYS, secureStorage } from '../utils/storage';
 
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:5000/api'
-  : 'https://your-replit-app-name.replit.app/api';
+import { API_BASE_URL } from "../../constants"; // Adjust path as needed
 
 export interface ApiResponse<T = any> {
   success: boolean;

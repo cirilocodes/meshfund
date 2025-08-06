@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE_URL = __DEV__ ? 'http://localhost:5000/api' : 'https://api.meshfund.com/api';
+import { API_BASE_URL } from "../../constants"; 
 
 export interface User {
   id: string;

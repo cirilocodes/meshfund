@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-} from 'react-native';
+import { styled } from 'nativewind';
+import { View as RNView, Text as RNText, ScrollView as RNScrollView, TouchableOpacity as RNTouchableOpacity, Modal as RNModal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Alert } from 'react-native';
 
 import { ContributionService } from '../../services/contributions';
 import { COLORS } from '../../constants/colors';
@@ -46,7 +41,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     type: 'paypal',
     name: 'PayPal',
     description: 'Pay with your PayPal account',
-    icon: 'logo-paypal',
+    icon: 'logo-usd',
     enabled: true,
   },
   {
@@ -91,6 +86,11 @@ export default function PaymentMethods({
     name: '',
   });
   const [processing, setProcessing] = useState(false);
+  const View = styled(RNView);
+  const Text = styled(RNText);
+  const ScrollView = styled(RNScrollView);
+  const TouchableOpacity = styled(RNTouchableOpacity);
+  const Modal = styled(RNModal);
 
   const handleMethodSelect = (method: PaymentMethod) => {
     if (!method.enabled) {
@@ -177,24 +177,26 @@ export default function PaymentMethods({
     
     return `${currencySymbols[currency] || currency} ${amount}`;
   };
+  
+  const StyledView = styled(View);
 
   return (
-    <View className="flex-1 bg-background">
+    <StyledView className="flex-1 bg-background">
       {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-100">
-        <View className="flex-row items-center justify-between">
+      <StyledView className="px-6 py-4 bg-white border-b border-gray-100">
+        <StyledView className="flex-row items-center justify-between">
           <TouchableOpacity onPress={onCancel}>
             <Ionicons name="close" size={24} color={COLORS.primary} />
           </TouchableOpacity>
           <Text className="text-lg font-semibold text-primary">Payment</Text>
           <View style={{ width: 24 }} />
-        </View>
-        
-        <View className="items-center mt-4">
+        </StyledView>
+
+        <StyledView className="items-center mt-4">
           <Text className="text-text-secondary">Amount to pay</Text>
           <Text className="text-3xl font-bold text-primary">{formatAmount()}</Text>
-        </View>
-      </View>
+        </StyledView>
+      </StyledView>
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 24 }}>
         <Text className="text-xl font-semibold text-primary mb-6">
@@ -331,6 +333,6 @@ export default function PaymentMethods({
           </ScrollView>
         </View>
       </Modal>
-    </View>
+    </StyledView>
   );
 }

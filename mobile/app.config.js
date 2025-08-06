@@ -46,7 +46,6 @@ export default {
       favicon: "./assets/favicon.png"
     },
     plugins: [
-      "expo-secure-store",
       "expo-local-authentication",
       [
         "expo-camera",

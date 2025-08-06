@@ -42,9 +42,7 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://meshfund.com', 'https://app.meshfund.com']
-    : ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:19006'],
+  origin: '*',
   credentials: true
 }));
 

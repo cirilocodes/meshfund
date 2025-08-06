@@ -1,0 +1,27 @@
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:09:50.454Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:09:50.455Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:09:50.455Z"}
+{"ip":"127.0.0.1","level":"info","message":"GET /","service":"meshfund-api","timestamp":"2025-08-06T01:10:08.028Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
+{"ip":"127.0.0.1","level":"info","message":"GET /favicon.ico","service":"meshfund-api","timestamp":"2025-08-06T01:10:08.515Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"meshfund-api","timestamp":"2025-08-06T01:11:40.286Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:52:53.627Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:52:53.628Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:52:53.629Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:56:06.165Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:56:06.167Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:56:06.167Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:56:19.107Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:56:19.108Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:56:19.109Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:56:48.297Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:56:48.298Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:56:48.299Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T01:56:53.838Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T01:56:53.839Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T01:56:53.839Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T02:09:13.195Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T02:09:13.196Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T02:09:13.196Z"}
+{"level":"info","message":"MeshFund API server running on port 5000","service":"meshfund-api","timestamp":"2025-08-06T02:09:38.631Z"}
+{"level":"info","message":"Environment: development","service":"meshfund-api","timestamp":"2025-08-06T02:09:38.633Z"}
+{"level":"info","message":"WebSocket server available at ws://localhost:5000/ws","service":"meshfund-api","timestamp":"2025-08-06T02:09:38.633Z"}
