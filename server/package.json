@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@paypal/paypal-server-sdk": "^0.5.1",
     "@sendgrid/mail": "^8.1.0",
     "bcrypt": "^5.1.1",

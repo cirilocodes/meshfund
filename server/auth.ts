@@ -86,6 +86,7 @@ export class AuthService {
       return null;
     }
 
-    return storage.getUser(payload.userId);
+    const user = await storage.getUser(payload.userId);
+    return user ?? null; // This ensures the return type is either User or null
   }
 }

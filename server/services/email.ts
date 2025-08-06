@@ -1,11 +1,13 @@
 import { MailService } from '@sendgrid/mail';
 
 const mailService = new MailService();
-const apiKey = process.env.SENDGRID_API_KEY;
-const fromEmail = process.env.FROM_EMAIL || 'noreply@meshfund.com';
+const apiKey = process.env.SENDGRID_API_KEY ?? '';
+const fromEmail = process.env.FROM_EMAIL ?? 'noreply@meshfund.com';
 
 if (apiKey) {
   mailService.setApiKey(apiKey);
+} else {
+  console.warn('SendGrid API key is missing');
 }
 
 export interface EmailParams {
@@ -23,13 +25,15 @@ export class EmailService {
     }
 
     try {
-      await mailService.send({
+      const message: any = {
         to: params.to,
         from: fromEmail,
         subject: params.subject,
-        text: params.text,
-        html: params.html,
-      });
+        ...(params.text && { text: params.text }),
+        ...(params.html && { html: params.html }),
+      };
+
+      await mailService.send(message);
       return true;
     } catch (error) {
       console.error('SendGrid email error:', error);

@@ -11,13 +11,17 @@ import {
   Environment,
   LogLevel,
   OAuthAuthorizationController,
-  OrdersController,
 } from "@paypal/paypal-server-sdk";
+import {OrdersController} from "@paypal/checkout-server-sdk";
 import { Request, Response } from "express";
 
 /* PayPal Controllers Setup */
 
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+  console.warn("Missing PayPal credentials - PayPal features will be disabled");
+  throw new Error("Missing PayPal credentials");
+}
 
 if (!PAYPAL_CLIENT_ID) {
   console.warn("Missing PAYPAL_CLIENT_ID - PayPal features will be disabled");

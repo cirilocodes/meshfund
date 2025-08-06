@@ -95,7 +95,7 @@ export const notifications = pgTable('notifications', {
   title: varchar('title', { length: 255 }).notNull(),
   message: text('message').notNull(),
   isRead: boolean('is_read').default(false),
-  data: json('data'),
+  data: json('data').$type<NotificationData>(),
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -213,3 +213,10 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 export type Dispute = typeof disputes.$inferSelect;
 export type InsertDispute = typeof disputes.$inferInsert;
+
+export interface NotificationData {
+  groupId?: string;
+  groupName?: string;
+  amount?: string;
+  dueDate?: string;
+}
