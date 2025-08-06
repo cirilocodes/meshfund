@@ -1,11 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'auth_token',
-  USER_DATA: 'user_data',
-  BIOMETRIC_ENABLED: 'biometric_enabled',
-  PUSH_TOKEN: 'push_token',
-  ONBOARDING_COMPLETED: 'onboarding_completed',
+  AUTH_TOKEN: 'authToken',
+  USER_DATA: 'userData',
+  BIOMETRIC_ENABLED: 'biometricEnabled',
+  PUSH_TOKEN: 'pushToken',
+  ONBOARDING_COMPLETED: 'onboardingCompleted',
 } as const;
 
 class SecureStorage {
@@ -13,7 +13,7 @@ class SecureStorage {
     try {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.error(`Error storing ${key}:`, error);
+      console.error(`[SecureStorage] Error storing key "${key}":`, error);
       throw error;
     }
   }
@@ -22,7 +22,7 @@ class SecureStorage {
     try {
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      console.error(`Error retrieving ${key}:`, error);
+      console.error(`[SecureStorage] Error retrieving key "${key}":`, error);
       return null;
     }
   }
@@ -31,39 +31,42 @@ class SecureStorage {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.error(`Error removing ${key}:`, error);
+      console.error(`[SecureStorage] Error removing key "${key}":`, error);
       throw error;
     }
   }
 
-  async setObject(key: string, value: object): Promise<void> {
+  async setObject<T extends object>(key: string, value: T): Promise<void> {
     try {
-      const jsonValue = JSON.stringify(value);
-      await this.setItem(key, jsonValue);
+      const json = JSON.stringify(value);
+      await this.setItem(key, json);
     } catch (error) {
-      console.error(`Error storing object ${key}:`, error);
+      console.error(`[SecureStorage] Error storing object "${key}":`, error);
       throw error;
     }
   }
 
   async getObject<T = any>(key: string): Promise<T | null> {
     try {
-      const jsonValue = await this.getItem(key);
-      return jsonValue ? JSON.parse(jsonValue) : null;
+      const raw = await this.getItem(key);
+      return raw ? JSON.parse(raw) : null;
     } catch (error) {
-      console.error(`Error retrieving object ${key}:`, error);
+      console.error(`[SecureStorage] Error parsing object "${key}":`, error);
       return null;
     }
   }
 
   async clear(): Promise<void> {
     try {
-      // Clear all auth-related data
-      await this.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      await this.removeItem(STORAGE_KEYS.USER_DATA);
-      await this.removeItem(STORAGE_KEYS.PUSH_TOKEN);
+      await Promise.all([
+        this.removeItem(STORAGE_KEYS.AUTH_TOKEN),
+        this.removeItem(STORAGE_KEYS.USER_DATA),
+        this.removeItem(STORAGE_KEYS.PUSH_TOKEN),
+        this.removeItem(STORAGE_KEYS.BIOMETRIC_ENABLED),
+        this.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED),
+      ]);
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      console.error('[SecureStorage] Error clearing storage:', error);
       throw error;
     }
   }

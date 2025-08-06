@@ -41,10 +41,9 @@ app.use(helmet({
 }));
 
 // CORS configuration
-app.use(cors({
-  origin: '169.254.170.233:5000',
-  credentials: true
-}));
+// server/index.ts or server/api.ts
+app.use(cors({ origin: '*' }));
+
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

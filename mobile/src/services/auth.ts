@@ -2,7 +2,6 @@ import * as SecureStore from 'expo-secure-store';
 
 import { API_BASE_URL } from "../../constants"; 
 
-
 export interface User {
   id: string;
   email: string;
