@@ -1,1 +1,3 @@
-export const API_BASE_URL = 'https://meshfund-cyril-akakpos-projects.vercel.app';
+import Constants from 'expo-constants';
+
+export const API_BASE_URL = Constants?.expoConfig?.extra?.API_URL ?? '';

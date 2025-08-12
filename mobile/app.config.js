@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 export default {
   expo: {
     name: "MeshFund",
@@ -6,14 +8,15 @@ export default {
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
+
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
       backgroundColor: "#1E40AF"
     },
-    assetBundlePatterns: [
-      "**/*"
-    ],
+
+    assetBundlePatterns: ["**/*"],
+
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.meshfund.app",
@@ -24,6 +27,7 @@ export default {
         NSLocationWhenInUseUsageDescription: "This app uses location to help find nearby groups and verify transactions."
       }
     },
+
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
@@ -42,31 +46,34 @@ export default {
         "android.permission.USE_FINGERPRINT"
       ]
     },
+
     web: {
       favicon: "./assets/favicon.png"
     },
+
     plugins: [
       "expo-local-authentication",
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow MeshFund to use camera for document verification and KYC compliance."
+          cameraPermission: "Allow MeshFund to use camera for document verification and KYC compliance."
         }
       ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#1E40AF",
-          "sounds": ["./assets/notification.wav"]
+          icon: "./assets/notification-icon.png",
+          color: "#1E40AF",
+          sounds: ["./assets/notification.wav"]
         }
       ]
     ],
+
     extra: {
+      API_URL: process.env.API_URL,
       eas: {
-        projectId: "meshfund-production-id"
+        projectId: "d479777a-42c2-4f0f-ac9f-4b0944cfec33"
       }
-    },
-    owner: "meshfund"
+    }
   }
 };
