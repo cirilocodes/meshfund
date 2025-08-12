@@ -1,5 +1,11 @@
 import 'dotenv/config';
 
+// app.config.js
+module.exports = ({ config }) => ({
+  ...config,
+  plugins: [...(config.plugins || []), "expo-secure-store"],
+});
+
 export default {
   expo: {
     name: "MeshFund",
