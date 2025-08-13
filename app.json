@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "93af1aa1-c7f0-40e8-8b6d-9231bb02c7cc"
+      }
+    },
+    "android": {
+      "package": "com.meshfund.workspace"
+    }
+  }
+}
